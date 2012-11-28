@@ -15,7 +15,7 @@ Example of targets:
     <copy todir="${deploy_testing.dir}">
         <fileset refid="app"/>
         <filterchain>
-            <filterreader classname="preprocessor.PreProcessorFilter">
+            <filterreader classname="path.to.PreProcessorFilter">
                 <param name="TESTING" value="1" />
             </filterreader>
         </filterchain>
@@ -26,7 +26,7 @@ Example of targets:
     <copy todir="${deploy_staging.dir}">
         <fileset refid="app"/>
         <filterchain>
-            <filterreader classname="preprocessor.PreProcessorFilter">
+            <filterreader classname="path.to.PreProcessorFilter">
                 <param name="STAGING" value="1" />
             </filterreader>
         </filterchain>
@@ -48,3 +48,5 @@ function sendMail() {
 #endif
 }
 ```
+
+It works for any files (PHP, CSS, JS, ..)
