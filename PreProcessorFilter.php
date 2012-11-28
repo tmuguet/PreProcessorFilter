@@ -109,7 +109,7 @@ class PreProcessorFilter extends BaseParamFilterReader
                 return !in_array($directive[1], $this->definitions);
 
             case 'else':
-                return !($this->evaluateContext($directive[1]));
+                return !($this->evaluateDirective($directive[1]));
 
             default:
                 // unrecognized
