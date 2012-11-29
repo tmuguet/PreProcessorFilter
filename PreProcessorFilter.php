@@ -144,6 +144,11 @@ class PreProcessorFilter extends BaseParamFilterReader
      */
     private function process($content)
     {
+        if (preg_match("/#(ifdef|ifndef|else|endif)/", $content) === 0) {
+            // No directives found, do not treat file
+            return $content;
+        }
+        
         $lines        = explode("\n", $content);
         $root         = new PreProcessorBlock();
         $currentBlock = $root;

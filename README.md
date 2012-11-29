@@ -7,6 +7,8 @@ Currently supports:
 * #ifdef DEFINITION (#else) / #endif
 * #ifndef DEFINITION (#else) / #endif
 
+Definitions can consist of letters, numbers and underscores ([A-Za-z0-9_]).
+
 
 Example of targets:
 
