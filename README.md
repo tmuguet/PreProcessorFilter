@@ -4,8 +4,13 @@ PreProcessorFilter
 Simple pre-processor filter for phing.
 
 Currently supports:
-* #ifdef DEFINITION (#else) / #endif
-* #ifndef DEFINITION (#else) / #endif
+* #if DEFINITION : succeeds if DEFINITION is set and is true (in the PHP way)
+* #ifdef DEFINITION : succeeds if DEFINITION is set
+* #ifndef DEFINITION : succeeds if DEFINITION is not set
+* #elif DEFINITION
+* #elifdef
+* #elifndef
+* #endif
 
 Definitions can consist of letters, numbers and underscores ([A-Za-z0-9_]).
 
@@ -36,7 +41,6 @@ Example of targets:
 </target>
 ```
 
-For now, only the names of the definitions (passed as parameters to the pre-processor filter) are used; their values are ignored.
 All parameters are considered as definitions; the filter does not accept any parameter.
 
 Example of file:
