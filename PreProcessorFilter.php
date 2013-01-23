@@ -19,6 +19,16 @@
 require_once 'phing/filters/BaseParamFilterReader.php';
 require_once 'phing/filters/ChainableReader.php';
 
+require_once 'PreProcessorContext.php';
+require_once 'PreProcessorDirective.php';
+require_once 'PreProcessorDirectiveRoot.php';
+require_once 'PreProcessorDirectiveCode.php';
+require_once 'PreProcessorDirectiveIf.php';
+require_once 'PreProcessorDirectiveIfdef.php';
+require_once 'PreProcessorDirectiveElif.php';
+require_once 'PreProcessorDirectiveElifdef.php';
+require_once 'PreProcessorDirectiveElse.php';
+
 /**
  * Pre-processor filter
  * 
@@ -30,16 +40,28 @@ require_once 'phing/filters/ChainableReader.php';
  * </filterchain>
  *
  * @author Thomas Muguet <t.muguet@thomasmuguet.info>
- * @version 1.1.0
+ * @version 1.2.0
  */
 class PreProcessorFilter extends BaseParamFilterReader
 {
 
     /**
      * Defined definitions
-     * @var array
+     * @var PreProcessorContext
      */
-    public $definitions = array();
+    private $context = NULL;
+
+    /**
+     * Gets the context.
+     * @return PreProcessorContext
+     */
+    public function getContext()
+    {
+        if ($this->context === NULL) {
+            $this->context = new PreProcessorContext();
+        }
+        return $this->context;
+    }
 
     /**
      * Reads input and returns pre-processed output.
@@ -90,69 +112,9 @@ class PreProcessorFilter extends BaseParamFilterReader
         $params = $this->getParameters();
         if ($params) {
             foreach ($params as $param) {
-                $this->definitions[$param->getName()] = $param->getValue();
+                $this->getContext()->definitions[$param->getName()] = $param->getValue();
             }
         }
-    }
-
-    /**
-     * Evaluates a directive
-     * @param array $directive
-     * @return bool
-     */
-    private function evaluateDirective(array $directive)
-    {
-        switch ($directive[0]) {
-            case 'if':
-                return key_exists($directive[1], $this->definitions) &&
-                        $this->definitions[$directive[1]];
-
-            case 'ifdef':
-                return key_exists($directive[1], $this->definitions);
-
-            case 'ifndef':
-                return !key_exists($directive[1], $this->definitions);
-
-            case 'elif':
-                return !($this->evaluateDirective($directive[2])) &&
-                        key_exists($directive[1], $this->definitions) &&
-                        $this->definitions[$directive[1]];
-
-            case 'elifdef':
-                return !($this->evaluateDirective($directive[2])) &&
-                        key_exists($directive[1], $this->definitions);
-
-            case 'elifndef':
-                return !($this->evaluateDirective($directive[2])) &&
-                        !key_exists($directive[1], $this->definitions);
-
-            case 'else':
-                return !($this->evaluateDirective($directive[1]));
-
-            default:
-                // unrecognized
-                return FALSE;
-        }
-    }
-
-    /**
-     * Process a block and returnes lines of code
-     * @param PreProcessorBlock $rootBlock Block to process
-     * @return array
-     */
-    private function processBlock(PreProcessorBlock $rootBlock)
-    {
-        $lines = array();
-        foreach ($rootBlock->subblocks as $block) {
-            if ($block instanceof PreProcessorBlock) {
-                if ($this->evaluateDirective($block->directive)) {
-                    $lines = array_merge($lines, $this->processBlock($block));
-                }
-            } else {
-                $lines[] = $block;
-            }
-        }
-        return $lines;
     }
 
     /**
@@ -160,101 +122,60 @@ class PreProcessorFilter extends BaseParamFilterReader
      * @param string $content File content to pre-process
      * @return string Pre-processed file
      */
-    private function process($content)
+    protected function process($content)
     {
-        if (preg_match("/#(if|else|endif)/", $content) === 0) {
+        if (preg_match("/#(if|else|endif|call)/", $content) === 0) {
             // No directives found, do not treat file
             return $content;
         }
 
-        $lines             = explode("\n", $content);
-        $root              = new PreProcessorBlock();
-        $currentBlock      = $root;
+        $lines      = explode("\n", $content);
+        $root       = new PreProcessorDirectiveRoot();
+        $blockStack = array($root);
         $definitionsRegexp = "[A-Z-a-z0-9_]+";
 
         for ($i = 0; $i < sizeof($lines); $i++) {
             if (preg_match("/#if ($definitionsRegexp)/", $lines[$i], $matches) === 1) {
                 // start new block
-                $newBlock            = new PreProcessorBlock();
-                $newBlock->parent    = $currentBlock;
-                $newBlock->directive = array("if", $matches[1]);
-
-                $currentBlock->subblocks[] = $newBlock;
-                $currentBlock              = $newBlock;
-            } else if (preg_match("/#(ifdef|ifndef) ($definitionsRegexp)/",
-                                  $lines[$i], $matches) === 1) {
-                // start new block
-                $newBlock            = new PreProcessorBlock();
-                $newBlock->parent    = $currentBlock;
-                $newBlock->directive = array($matches[1], $matches[2]);
-
-                $currentBlock->subblocks[] = $newBlock;
-                $currentBlock              = $newBlock;
+                $newBlock = new PreProcessorDirectiveIf($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
+            } else if (preg_match("/#ifdef ($definitionsRegexp)/", $lines[$i],
+                                  $matches) === 1) {
+                $newBlock = new PreProcessorDirectiveIfdef($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
+            } else if (preg_match("/#ifndef ($definitionsRegexp)/", $lines[$i],
+                                  $matches) === 1) {
+                $newBlock = new PreProcessor_Directive_Ifndef($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
             } else if (preg_match("/#elif ($definitionsRegexp)/", $lines[$i],
                                   $matches) === 1) {
-                // end previous block
-                $newBlock            = new PreProcessorBlock();
-                $newBlock->parent    = $currentBlock->parent;
-                $newBlock->directive = array(
-                    "elif", $matches[1], $currentBlock->directive
-                );
-
-                $currentBlock->parent->subblocks[] = $newBlock;
-                $currentBlock                      = $newBlock;
-            } else if (preg_match("/#(elifdef|elifndef) ($definitionsRegexp)/",
+                $newBlock = new PreProcessorDirectiveElif($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
+            } else if (preg_match("/#elifdef ($definitionsRegexp)/", $lines[$i],
+                                  $matches) === 1) {
+                $newBlock = new PreProcessorDirectiveElifdef($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
+            } else if (preg_match("/#elifndef ($definitionsRegexp)/",
                                   $lines[$i], $matches) === 1) {
-                // end previous block
-                $newBlock            = new PreProcessorBlock();
-                $newBlock->parent    = $currentBlock->parent;
-                $newBlock->directive = array(
-                    $matches[1], $matches[2], $currentBlock->directive
-                );
-
-                $currentBlock->parent->subblocks[] = $newBlock;
-                $currentBlock                      = $newBlock;
+                $newBlock = new PreProcessorDirectiveElifndef($blockStack[0], $matches[1]);
+                array_unshift($blockStack, $newBlock);  // New top
             } else if (preg_match("/#else/", $lines[$i], $matches) === 1) {
-                // end previous block
-                $newBlock            = new PreProcessorBlock();
-                $newBlock->parent    = $currentBlock->parent;
-                $newBlock->directive = array("else", $currentBlock->directive);
-
-                $currentBlock->parent->subblocks[] = $newBlock;
-                $currentBlock                      = $newBlock;
+                $newBlock = new PreProcessorDirectiveElse($blockStack[0]);
+                array_unshift($blockStack, $newBlock);  // New top
             } else if (preg_match("/#endif/", $lines[$i], $matches) === 1) {
-                $currentBlock = $currentBlock->parent;
+                do {
+                    $shifted = array_shift($blockStack);
+                } while ($shifted instanceof PreProcessorDirectiveElif
+                || $shifted instanceof PreProcessorDirectiveElse);
+            } else if (preg_match("/#call ($definitionsRegexp)\(($definitionsRegexp;)*\) ",
+                                  $lines[$i], $matches) === 1) {
+                $newBlock = new PreProcessorDirectiveCall($blockStack[0], $matches[1], $matches[2]);
             } else {
-                $currentBlock->subblocks[] = $lines[$i];
+                $newBlock = new PreProcessorDirectiveCode($blockStack[0], $lines[$i]);
             }
         }
 
-        $processedLines = $this->processBlock($root);
+        $processedLines = $root->process($this->getContext());
         return implode("\n", $processedLines);
     }
-}
-
-/**
- * Internal structure for a block of code
- */
-class PreProcessorBlock
-{
-
-    /**
-     * Parent block
-     * @var PreProcessorBlock
-     */
-    public $parent;
-
-    /**
-     * Child blocks
-     * 
-     * Instances of PreProcessorBlock or lines of code
-     * @var array 
-     */
-    public $subblocks = array();
-
-    /**
-     * Pre-processor directive controlling this block
-     * @var array 
-     */
-    public $directive = array();
 }
