@@ -167,9 +167,6 @@ class PreProcessorFilter extends BaseParamFilterReader
                     $shifted = array_shift($blockStack);
                 } while ($shifted instanceof PreProcessorDirectiveElif
                 || $shifted instanceof PreProcessorDirectiveElse);
-            } else if (preg_match("/#call ($definitionsRegexp)\(($definitionsRegexp;)*\) ",
-                                  $lines[$i], $matches) === 1) {
-                $newBlock = new PreProcessorDirectiveCall($blockStack[0], $matches[1], $matches[2]);
             } else {
                 $newBlock = new PreProcessorDirectiveCode($blockStack[0], $lines[$i]);
             }
