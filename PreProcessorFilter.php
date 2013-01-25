@@ -112,7 +112,12 @@ class PreProcessorFilter extends BaseParamFilterReader
         $params = $this->getParameters();
         if ($params) {
             foreach ($params as $param) {
-                $this->getContext()->definitions[$param->getName()] = $param->getValue();
+                if ($param->getName() == "macrodir") {
+                    $this->getContext()->setMacroDir($param->getValue());
+                } else {
+                    $this->getContext()->addDefinition($param->getName(),
+                                                       $param->getValue());
+                }
             }
         }
     }
@@ -135,27 +140,27 @@ class PreProcessorFilter extends BaseParamFilterReader
         $definitionsRegexp = "[A-Z-a-z0-9_]+";
 
         for ($i = 0; $i < sizeof($lines); $i++) {
-            if (preg_match("/#if ($definitionsRegexp)/", $lines[$i], $matches) === 1) {
+            if (preg_match("/#if\s+($definitionsRegexp)/", $lines[$i], $matches) === 1) {
                 // start new block
                 $newBlock = new PreProcessorDirectiveIf($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top
-            } else if (preg_match("/#ifdef ($definitionsRegexp)/", $lines[$i],
+            } else if (preg_match("/#ifdef\s+($definitionsRegexp)/", $lines[$i],
                                   $matches) === 1) {
                 $newBlock = new PreProcessorDirectiveIfdef($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top
-            } else if (preg_match("/#ifndef ($definitionsRegexp)/", $lines[$i],
-                                  $matches) === 1) {
+            } else if (preg_match("/#ifndef\s+($definitionsRegexp)/",
+                                  $lines[$i], $matches) === 1) {
                 $newBlock = new PreProcessor_Directive_Ifndef($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top
-            } else if (preg_match("/#elif ($definitionsRegexp)/", $lines[$i],
+            } else if (preg_match("/#elif\s+($definitionsRegexp)/", $lines[$i],
                                   $matches) === 1) {
                 $newBlock = new PreProcessorDirectiveElif($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top
-            } else if (preg_match("/#elifdef ($definitionsRegexp)/", $lines[$i],
-                                  $matches) === 1) {
+            } else if (preg_match("/#elifdef\s+($definitionsRegexp)/",
+                                  $lines[$i], $matches) === 1) {
                 $newBlock = new PreProcessorDirectiveElifdef($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top
-            } else if (preg_match("/#elifndef ($definitionsRegexp)/",
+            } else if (preg_match("/#elifndef\s+($definitionsRegexp)/",
                                   $lines[$i], $matches) === 1) {
                 $newBlock = new PreProcessorDirectiveElifndef($blockStack[0], $matches[1]);
                 array_unshift($blockStack, $newBlock);  // New top

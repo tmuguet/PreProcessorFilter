@@ -12,7 +12,7 @@ class PreProcessorDirectiveCode extends PreProcessorDirective
      * Line of code
      * @var string 
      */
-    public $line = NULL;
+    protected $line = NULL;
 
     /**
      * Initializes a new line

@@ -12,7 +12,7 @@ class PreProcessorDirectiveElif extends PreProcessorDirective
      * Constant tested
      * @var string
      */
-    public $constant = NULL;
+    protected $constant = NULL;
 
     /**
      * Initializes a new elif
@@ -26,7 +26,7 @@ class PreProcessorDirectiveElif extends PreProcessorDirective
         if ($parent instanceof PreProcessorDirectiveIf) {
             $parentIf = $parent;
         } else if ($parent instanceof PreProcessorDirectiveElif) {
-            $parentIf = $parent->parent;
+            $parentIf = $parent->getParent();
         } else {
             throw new Exception("Unrecognized parent: " . get_class($parent));
         }
@@ -54,7 +54,7 @@ class PreProcessorDirectiveElif extends PreProcessorDirective
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return key_exists($this->constant, $context->definitions) &&
-                $context->definitions[$this->constant];
+        return $context->hasDefinition($this->constant)
+                && $context->getDefinition($this->constant);
     }
 }

@@ -19,7 +19,7 @@ class PreProcessorDirectiveElse extends PreProcessorDirective
         if ($parent instanceof PreProcessorDirectiveIf) {
             $parentIf = $parent;
         } else if ($parent instanceof PreProcessorDirectiveElif) {
-            $parentIf = $parent->parent;
+            $parentIf = $parent->getParent();
         } else {
             throw new Exception("Unrecognized parent: " . get_class($parent));
         }

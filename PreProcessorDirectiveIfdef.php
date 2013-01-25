@@ -16,7 +16,7 @@ class PreProcessorDirectiveIfdef extends PreProcessorDirectiveIf
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return key_exists($this->constant, $context->definitions);
+        return $context->hasDefinition($this->constant);
     }
 }
 
@@ -36,6 +36,6 @@ class PreProcessor_Directive_Ifndef extends PreProcessorDirectiveIfdef
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return !key_exists($this->constant, $context->definitions);
+        return !$context->hasDefinition($this->constant);
     }
 }

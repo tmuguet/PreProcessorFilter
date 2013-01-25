@@ -16,7 +16,7 @@ class PreProcessorDirectiveElifdef extends PreProcessorDirectiveElif
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return key_exists($this->constant, $context->definitions);
+        return $context->hasDefinition($this->constant);
     }
 }
 
@@ -36,6 +36,6 @@ class PreProcessorDirectiveElifndef extends PreProcessorDirectiveElif
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return !key_exists($this->constant, $context->definitions);
+        return !$context->hasDefinition($this->constant);
     }
 }

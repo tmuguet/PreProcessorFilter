@@ -4,34 +4,27 @@
  * Macro for the pre-processor
  * @author Thomas Muguet <t.muguet@thomasmuguet.info>
  */
-class PreProcessorMacroStart
+class PreProcessorMacro
 {
-
-    /**
-     * Name of the macro
-     * @var string 
-     */
-    public $name      = NULL;
 
     /**
      * Variable names
      * @var array 
      */
-    public $variables = array();
+    protected $variables = array();
 
     /**
      * Content of the macro
      * @var string
      */
-    public $content = NULL;
+    protected $content = NULL;
 
     /**
      * Iniitalizes a new macro
-     * @param string $name Name of the macro
      */
-    public function __construct($name)
+    public function __construct()
     {
-        $this->name = $name;
+        
     }
 
     /**

@@ -12,19 +12,19 @@ class PreProcessorDirectiveIf extends PreProcessorDirective
      * List of corresponding Elif directives
      * @var array 
      */
-    public $elif = array();
+    protected $elif = array();
 
     /**
      * Corresponding else directive
      * @var PreProcessorDirectiveElse 
      */
-    public $else     = NULL;
+    protected $else     = NULL;
 
     /**
      * Constant tested
      * @var string
      */
-    public $constant = NULL;
+    protected $constant = NULL;
 
     /**
      * Initializes a new if
@@ -93,7 +93,7 @@ class PreProcessorDirectiveIf extends PreProcessorDirective
      */
     public function evaluate(PreProcessorContext &$context)
     {
-        return key_exists($this->constant, $context->definitions) &&
-                $context->definitions[$this->constant];
+        return $context->hasDefinition($this->constant)
+                && $context->getDefinition($this->constant);
     }
 }

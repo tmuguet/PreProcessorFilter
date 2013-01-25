@@ -12,12 +12,12 @@ abstract class PreProcessorDirective
      * Parent of this directive
      * @var PreProcessorDirective 
      */
-    public $parent    = NULL;
+    protected $parent    = NULL;
     /**
      * Sub-blocks of the directive
      * @var array 
      */
-    public $subblocks = array();
+    protected $subblocks = array();
 
     /**
      * Initializes a new directive
@@ -27,6 +27,10 @@ abstract class PreProcessorDirective
     {
         $this->parent = $parent;
         $parent->addSubBlock($this);
+    }
+    
+    public function getParent() {
+        return $this->parent;
     }
 
     /**
