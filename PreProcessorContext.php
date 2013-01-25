@@ -17,7 +17,9 @@ class PreProcessorContext
      * Macros
      * @var array 
      */
-    public $macros = array();
+    protected $macros = array();
+    private $macrodir        = NULL;
+    private $hasParsedMacros = FALSE;
     
     public function __construct()
     {
@@ -40,4 +42,53 @@ class PreProcessorContext
         return $this->definitions[$name];
     }
 
+    public function setMacroDir($macrodir)
+    {
+        $this->macrodir = $macrodir;
+    }
+
+    public function hasMacro($name)
+    {
+        if (!$this->hasParsedMacros) {
+            $this->parseMacros();
+        }
+        return array_key_exists($name, $this->macros);
+    }
+
+    public function getMacro($name)
+    {
+        if (!$this->hasParsedMacros) {
+            $this->parseMacros();
+        }
+        return $this->macros[$name];
+    }
+
+    private function parseMacros()
+    {
+        if ($this->macrodir === NULL || !is_dir($this->macrodir)) {
+            throw new Exception("Cannot find macro directory : " . $this->macrodir);
+        }
+
+        $files = array_diff(scandir($this->macrodir), array('..', '.'));
+        foreach ($files as $file) {
+            $name = basename($file, '.php');
+            if (array_key_exists($name, $this->macros)) {
+                throw new Exception("Macro $name is already defined");
+            }
+            $macroDef = file_get_contents($this->macrodir . DIRECTORY_SEPARATOR . $file);
+            $args     = explode(',',
+                                substr($macroDef, 0, strpos($macroDef, "\n")));
+            array_walk($args, 'trim');
+            $content  = substr($macroDef, strpos($macroDef, "\n") + 1);
+
+            $macro = new PreProcessorMacro();
+            foreach ($args as $arg) {
+                $macro->addVariable($arg);
+            }
+            $macro->setContent($content);
+
+            $this->macros[$name]   = $macro;
+        }
+        $this->hasParsedMacros = TRUE;
+    }
 }

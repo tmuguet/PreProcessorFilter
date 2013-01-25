@@ -19,6 +19,7 @@
 require_once 'phing/filters/BaseParamFilterReader.php';
 require_once 'phing/filters/ChainableReader.php';
 
+require_once 'PreProcessorMacro.php';
 require_once 'PreProcessorContext.php';
 require_once 'PreProcessorDirective.php';
 require_once 'PreProcessorDirectiveRoot.php';
@@ -28,6 +29,7 @@ require_once 'PreProcessorDirectiveIfdef.php';
 require_once 'PreProcessorDirectiveElif.php';
 require_once 'PreProcessorDirectiveElifdef.php';
 require_once 'PreProcessorDirectiveElse.php';
+require_once 'PreProcessorDirectiveCall.php';
 
 /**
  * Pre-processor filter
@@ -172,6 +174,13 @@ class PreProcessorFilter extends BaseParamFilterReader
                     $shifted = array_shift($blockStack);
                 } while ($shifted instanceof PreProcessorDirectiveElif
                 || $shifted instanceof PreProcessorDirectiveElse);
+            } else if (preg_match("/#call\s+($definitionsRegexp)\(([^)]*)\)/",
+                                  $lines[$i], $matches) === 1) {
+                $args     = explode(',', $matches[2]);
+                array_walk($args, 'trim');
+                $newBlock = new PreProcessorDirectiveCall(
+                                $blockStack[0], $matches[1], $args
+                );
             } else {
                 $newBlock = new PreProcessorDirectiveCode($blockStack[0], $lines[$i]);
             }

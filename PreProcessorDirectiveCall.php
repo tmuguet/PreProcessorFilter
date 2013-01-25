@@ -12,13 +12,13 @@ class PreProcessorDirectiveCall extends PreProcessorDirective
      * Name of the macro
      * @var string
      */
-    public $name = NULL;
+    protected $name = NULL;
 
     /**
      * Calling arguments of the macro
      * @var array
      */
-    public $args = array();
+    protected $args = array();
 
     /**
      * Initializes a new macro call
@@ -42,10 +42,9 @@ class PreProcessorDirectiveCall extends PreProcessorDirective
      */
     public function process(\PreProcessorContext &$context)
     {
-        if (!key_exists($context->macros, $this->name)) {
+        if (!$context->hasMacro($this->name)) {
             throw new Exception("Macro " . $this->name . " is not defined");
         }
-
-        return array($context->macros[$this->name]->call($this->args));
+        return array($context->getMacro($this->name)->call($this->args));
     }
 }
