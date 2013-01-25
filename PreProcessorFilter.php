@@ -38,11 +38,12 @@ require_once 'PreProcessorDirectiveCall.php';
  * <filterchain>
  * <filterreader classname="path.to.filters.PreProcessorFilter">
  * <param name="DEBUG" value="" />
+ * <param name="macrodir" value="/foo/bar" />
  * </filterreader>
  * </filterchain>
  *
  * @author Thomas Muguet <t.muguet@thomasmuguet.info>
- * @version 1.2.0
+ * @version 1.3.0
  */
 class PreProcessorFilter extends BaseParamFilterReader
 {
