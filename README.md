@@ -30,6 +30,7 @@ Examples of targets:
         <filterchain>
             <filterreader classname="path.to.PreProcessorFilter">
                 <param name="TESTING" value="1" />
+                <param name="macrodir" value="/myapp/macros" />
             </filterreader>
         </filterchain>
     </copy>
@@ -41,6 +42,7 @@ Examples of targets:
         <filterchain>
             <filterreader classname="path.to.PreProcessorFilter">
                 <param name="STAGING" value="1" />
+                <param name="macrodir" value="/myapp/macros" />
             </filterreader>
         </filterchain>
     </copy>
@@ -153,7 +155,7 @@ They are case-sensitive, so `viewGuard` and `viewguard` are different macros (re
 
 The format of a macro definition is basic:
 * The first line is the list of arguments that the macro accepts, comma-separated
-* The rest of the file is the content of the macro.
+* The rest of the file is the content of the macro. For now, this content is NOT processed by the pre-processor, so `#if`or `#call` directives won't work as expected.
 
 Examples:
 ```php
